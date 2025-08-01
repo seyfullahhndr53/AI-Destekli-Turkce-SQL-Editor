@@ -85,7 +85,7 @@ SQL Editörüne sorgunuzu yazın.
 
 Sonuçları anında alt kısımdaki panelde görün.
 
--- Örnek sorgular
+-- Örnek sorgular:
 SELECT * FROM Musteriler LIMIT 5;
 SELECT UrunAdi, Fiyat FROM Urunler ORDER BY Fiyat DESC LIMIT 10;
 SELECT Sehir, COUNT(*) as MusteriSayisi FROM Musteriler GROUP BY Sehir;
