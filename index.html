@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Modern SQL Editor - Türkçe veritabanı ile SQL öğrenin">
+	<title>🚀 Modern SQL Editor</title>
+
+	<link rel="preload" href="css/modern-style.css" as="style">
+	<link rel="preload" href="js/modern-app.js" as="script">
+
+	<link rel="stylesheet" href="css/bootstrap.min.css"/>
+	<link rel="stylesheet" href="css/bootstrap-theme.min.css"/>
+	<link rel="stylesheet" href="css/monokai_sublime.css"/>
+	<link rel="stylesheet" href="css/style.css"/>
+	<link rel="stylesheet" href="css/modern-style.css"/>
+
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗄️</text></svg>">
+
+	<script type="text/javascript" src="js/modern-app.js" defer></script>
+	
+	<script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
+	<script type="text/javascript" src="js/jquery.autosize.min.js"></script>
+	<script type="text/javascript" src="js/highlight.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/script.js"></script>
+	
+	<script>
+		// Feature detection - use modern app if supported
+		if (window.fetch && window.Promise && window.Map) {
+			// Modern browser - remove old scripts
+			document.querySelectorAll('script[src*="script.js"], script[src*="jquery"]').forEach(s => {
+				if (!s.src.includes('modern-app.js')) s.remove();
+			});
+		}
+	</script>
+</head>
+<body class="modern-ui">
+	<div id="loadingScreen" class="loading-screen">
+		<div class="loading-content">
+			<div class="loading-spinner"></div>
+			<h3>🗄️ SQL Editor Yükleniyor...</h3>
+			<p>Modern arayüz hazırlanıyor</p>
+		</div>
+	</div>
+
+	<header class="modern-header">
+		<div class="container-fluid">
+			<div class="header-content">
+				<div class="logo-section">
+					<h1>🗄️ <span class="gradient-text">Modern SQL Editor</span></h1>
+					<p class="subtitle">Türkçe Veritabanı ile SQL Öğrenin</p>
+				</div>
+				<div class="header-actions">
+					<div class="theme-toggle">
+						<button id="themeToggle" class="btn btn-outline-secondary">
+							<span class="theme-icon">🌙</span>
+						</button>
+					</div>
+					<div class="status-indicator">
+						<span id="connectionStatus" class="status-dot connecting"></span>
+						<span class="status-text">Bağlanıyor...</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<div class="main-container">
+		<aside class="sidebar">
+			<div class="sidebar-header">
+				<h3>📋 Veritabanı Tabloları</h3>
+				<div class="table-stats">
+					<span id="tableCount">0</span> tablo
+				</div>
+			</div>
+			
+			<div class="table-search">
+				<input type="text" id="tableSearch" class="form-control" placeholder="🔍 Tablo ara...">
+			</div>
+			
+			<div class="table-list-container">
+				<ul id="tables" class="table-list"></ul>
+				<div id="tableListEmpty" class="empty-state">
+					<div class="empty-icon">📭</div>
+					<p>Henüz tablo yüklenmedi</p>
+				</div>
+			</div>
+			
+			<div class="sidebar-footer">
+				<div class="tools-section">
+					<h4>🔧 Araçlar</h4>
+					<div class="btn-group-vertical">
+						<button id="runRandomDatabaseGenerator" class="btn btn-outline-primary btn-sm">
+							<span class="btn-icon">🎲</span> Rastgele DB Oluştur
+						</button>
+						<button id="runResetDatabase" class="btn btn-outline-warning btn-sm">
+							<span class="btn-icon">🔄</span> Veritabanını Sıfırla
+						</button>
+					</div>
+				</div>
+			</div>
+		</aside>
+
+		<main class="main-content">
+			<section class="sql-editor-section">
+				<div class="editor-header">
+					<h2>⚡ SQL Sorgu Editörü</h2>
+					<div class="editor-actions">
+						<button id="formatSQL" class="btn btn-outline-info btn-sm">
+							<span class="btn-icon">🎨</span> Formatla
+						</button>
+						<button id="clearEditor" class="btn btn-outline-secondary btn-sm">
+							<span class="btn-icon">🗑️</span> Temizle
+						</button>
+					</div>
+				</div>
+				
+				<div class="editor-container">
+					<div class="editor-toolbar">
+						<div class="toolbar-left">
+							<span class="editor-label">SQL Sorgusu:</span>
+						</div>
+						<div class="toolbar-right">
+							<span class="shortcut-hint">Ctrl + Enter ile çalıştır</span>
+						</div>
+					</div>
+					
+					<div class="editor-wrapper">
+						<textarea id="txtSqlQuery" class="sql-editor" 
+								  placeholder="-- SQL sorgunuzu buraya yazın
+-- Örnek: SELECT * FROM Musteriler LIMIT 10;
+-- Ctrl + Enter ile çalıştırabilirsiniz"></textarea>
+						<div class="editor-gutter">
+							<div class="line-numbers"></div>
+						</div>
+					</div>
+					
+					<div class="editor-footer">
+						<div class="footer-left">
+							<div class="query-stats">
+								<span id="queryLength">0</span> karakter
+							</div>
+						</div>
+						<div class="footer-right">
+							<button id="btnRun" class="btn btn-success btn-lg run-button">
+								<span class="btn-icon">▶️</span> Sorguyu Çalıştır
+								<span class="loading-spinner hidden"></span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="question-analysis-section">
+				<div class="editor-header">
+					<h2>🤔 Soru Analizi</h2>
+					<div class="editor-actions">
+						<button id="clearQuestion" class="btn btn-outline-secondary btn-sm">
+							<span class="btn-icon">🗑️</span> Temizle
+						</button>
+					</div>
+				</div>
+				
+				<div class="editor-container">
+					<div class="editor-toolbar">
+						<div class="toolbar-left">
+							<span class="editor-label">Sorunuz:</span>
+						</div>
+						<div class="toolbar-right">
+							<span class="shortcut-hint">Enter ile analiz et</span>
+						</div>
+					</div>
+					
+					<div class="question-wrapper">
+						<textarea id="txtQuestion" class="question-editor" 
+								  placeholder="-- Sorunuzu buraya yazın
+-- Örnek: En çok satılan ürünleri nasıl bulabilirim?
+-- Hangi müşteriler en çok sipariş veriyor?"></textarea>
+					</div>
+					
+					<div class="editor-footer">
+						<div class="footer-left">
+							<div class="question-stats">
+								<span id="questionLength">0</span> karakter
+							</div>
+						</div>
+						<div class="footer-right">
+							<button id="btnAnalyze" class="btn btn-info btn-lg analyze-button">
+								<span class="btn-icon">🔍</span> Soruyu Analiz Et
+								<span class="loading-spinner hidden"></span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="question-results-section">
+				<div id="questionResult" class="result-panel panel panel-default">
+					<div class="panel-header">
+						<h3 class="panel-title">
+							<span class="result-icon">💡</span> Önerilen Tablo ve Kolonlar
+						</h3>
+					</div>
+					<div class="panel-body">
+						<div class="question-welcome-message">
+							<div class="welcome-icon">🤔</div>
+							<h4>Soru Analiz Sistemi</h4>
+							<p>Yukarıdaki kutuya sorunuzu yazın, hangi tablo ve kolonları kullanmanız gerektiğini öğrenin.</p>
+							<div class="quick-questions">
+								<h5>Örnek Sorular:</h5>
+								<div class="example-buttons">
+									<button class="btn btn-outline-info btn-sm question-example-btn" data-question="En çok satılan ürünleri nasıl bulabilirim?">
+										🛍️ En çok satılan ürünler
+									</button>
+									<button class="btn btn-outline-info btn-sm question-example-btn" data-question="Hangi müşteriler en çok sipariş veriyor?">
+										👥 En aktif müşteriler
+									</button>
+									<button class="btn btn-outline-info btn-sm question-example-btn" data-question="Aylık satış raporunu nasıl çıkarabilirim?">
+										📈 Aylık satış raporu
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="results-section">
+				<div id="result" class="result-panel panel panel-default">
+					<div class="panel-header">
+						<h3 class="panel-title">
+							<span class="result-icon">📊</span> Sorgu Sonucu
+						</h3>
+						<div class="panel-actions">
+							<button id="exportResults" class="btn btn-outline-primary btn-sm" disabled>
+								<span class="btn-icon">📥</span> Dışa Aktar
+							</button>
+						</div>
+					</div>
+					<div class="panel-body">
+						<div class="welcome-message">
+							<div class="welcome-icon">🚀</div>
+							<h4>Modern SQL Editor'e Hoş Geldiniz!</h4>
+							<p>Başlamak için sol panelden bir tablo seçin veya yukarıdaki editöre SQL sorgunuzu yazın.</p>
+							<div class="quick-examples">
+								<h5>Hızlı Örnekler:</h5>
+								<div class="example-buttons">
+									<button class="btn btn-outline-info btn-sm example-btn" data-query="SELECT * FROM Musteriler LIMIT 5;">
+										👥 Müşteriler
+									</button>
+									<button class="btn btn-outline-info btn-sm example-btn" data-query="SELECT * FROM Urunler ORDER BY Fiyat DESC LIMIT 10;">
+										🛍️ En Pahalı Ürünler  
+									</button>
+									<button class="btn btn-outline-info btn-sm example-btn" data-query="SELECT COUNT(*) as ToplamSiparis FROM Siparisler;">
+										📈 Toplam Sipariş
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<div class="modal fade" id="databaseNotFoundModal">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content modern-modal">
+				<div class="modal-header">
+					<h4 class="modal-title">
+						<span class="modal-icon">🗄️</span>
+						Veritabanı Dosyası Bulunamadı
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div class="alert alert-info">
+						<strong>📋 Bilgi:</strong> Veritabanı dosyası henüz oluşturulmamış. 
+						Hemen bir veritabanı oluşturmak için aşağıdaki butona tıklayın.
+					</div>
+					<div class="setup-steps">
+						<h5>Ne yapılacak:</h5>
+						<ul>
+							<li>✅ Türkçe müşteri verileri oluşturulacak</li>
+							<li>✅ Ürün kataloğu hazırlanacak</li>
+							<li>✅ Sipariş geçmişi oluşturulacak</li>
+							<li>✅ Çalışan bilgileri eklenecek</li>
+						</ul>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" id="btnCreateDatabase" class="btn btn-primary btn-lg">
+						<span class="btn-icon">🚀</span> Veritabanını Oluştur
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="randomDatabaseGeneratorModal">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content modern-modal">
+				<div class="modal-header">
+					<h4 class="modal-title">
+						<span class="modal-icon">🎲</span>
+						Rastgele Veritabanı Oluşturuluyor
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div class="progress-info">
+						<p>Türkçe verilerle dolu bir veritabanı oluşturuluyor...</p>
+						<div class="creation-steps">
+							<div class="step active">
+								<span class="step-icon">✅</span> Tablolar oluşturuluyor
+							</div>
+							<div class="step">
+								<span class="step-icon">⏳</span> Veriler ekleniyor
+							</div>
+							<div class="step">
+								<span class="step-icon">⏳</span> İlişkiler kuruluyor
+							</div>
+						</div>
+					</div>
+					<iframe id="page" class="generation-frame"></iframe>
+				</div>
+				<div class="modal-footer">
+					<div class="progress modern-progress">
+						<div class="progress-bar progress-bar-striped active" role="progressbar" 
+							 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+							<span class="progress-text">İşlem devam ediyor...</span>
+						</div>
+					</div>
+					<button id="btnSuccessfully" class="btn btn-success btn-lg" onclick="location.reload()" disabled>
+						<span class="btn-icon">🎉</span> Tamamlandı - Sayfayı Yenile
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="resetDatabaseModal">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content modern-modal">
+				<div class="modal-header">
+					<h4 class="modal-title">
+						<span class="modal-icon">🔄</span>
+						Veritabanı Sıfırlanıyor
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div class="alert alert-warning">
+						<strong>⚠️ Dikkat:</strong> Tüm veriler silinecek ve temiz bir veritabanı oluşturulacak.
+					</div>
+					<iframe id="resetDatabasePage" class="generation-frame"></iframe>
+				</div>
+				<div class="modal-footer">
+					<button id="btnResetSuccessfully" class="btn btn-success btn-lg" onclick="location.reload()" disabled>
+						<span class="btn-icon">🔄</span> Tamamlandı - Sayfayı Yenile
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<footer class="modern-footer">
+		<div class="container">
+			<div class="footer-content">
+				<div class="footer-section">
+					<h4>🚀 Modern SQL Editor</h4>
+					<p>Türkçe veritabanı ile SQL öğrenmenin en modern yolu</p>
+				</div>
+				<div class="footer-section">
+					<h4>👨‍💻 Geliştirici</h4>
+					<p>
+						<strong>Orijinal:</strong> Eren Hatırnaz<br>
+						<strong>Modern Versiyon:</strong> AI Enhanced
+					</p>
+				</div>
+				<div class="footer-section">
+					<h4>🗄️ Veriler</h4>
+					<p>
+						Türkçe isimler: <a href="http://www.huseyindemirtas.net" target="_blank">Hüseyin Demirtaş</a>
+					</p>
+				</div>
+				<div class="footer-section">
+					<h4>📊 İstatistikler</h4>
+					<div class="stats">
+						<div class="stat-item">
+							<span class="stat-number" id="totalQueries">0</span>
+							<span class="stat-label">Sorgu</span>
+						</div>
+						<div class="stat-item">
+							<span class="stat-number" id="totalTables">0</span>
+							<span class="stat-label">Tablo</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; 2024 Modern SQL Editor - MIT License</p>
+			</div>
+		</div>
+	</footer>
+
+</body>
+</html>

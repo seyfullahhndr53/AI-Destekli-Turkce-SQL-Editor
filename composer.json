@@ -1,0 +1,24 @@
+{
+  "name": "erenhatirnaz/w3c-sql-editor-with-turkish-database",
+  "description": "W3C sitesindeki SQL Editörünün, Türkçe veritabanı ile hazırlanmış halidir.",
+  "minimum-stability": "beta",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Eren Hatırnaz",
+      "email": "erenhatirnaz@hotmail.com.tr"
+    }
+  ],
+  "require": {
+    "php": ">=7.4.0",
+    "ext-sqlite3": "*",
+    "ext-json": "*",
+    "ext-curl": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0"
+  },
+  "autoload": {
+    "psr-4": {"Tools\\": "tools"}
+  }
+}
