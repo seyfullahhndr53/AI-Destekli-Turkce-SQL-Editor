@@ -1,3 +1,7 @@
+ # 🚀 Modern SQL Editor
+
+  ![Modern SQL Editor Demo](assets/demo.gif)
+
   Modern, kullanıcı dostu ve yapay zeka destekli bir SQL öğrenme platformu. Gerçek hayattan alınmış Türkçe
   verilerle dolu bir veritabanı üzerinde SQL öğrenmenin en kolay ve en interaktif yolu!
 
